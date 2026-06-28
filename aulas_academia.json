@@ -22,5 +22,17 @@
         "modalidade": "1",
         "horário": "1",
         "alunos_matriculados": 0
+    },
+    {
+        "professor": "misty",
+        "modalidade": "natação",
+        "horário": "12",
+        "alunos_matriculados": 0
+    },
+    {
+        "professor": "misty",
+        "modalidade": "natação",
+        "horário": "21",
+        "alunos_matriculados": 1
     }
 ]

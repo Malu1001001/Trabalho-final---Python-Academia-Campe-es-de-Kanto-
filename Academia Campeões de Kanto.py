@@ -33,7 +33,7 @@ registros = []
 aulas = carregar_aulas()  
 
 while True:
-    opcao = funcoes.validar_opcao("\nDigite a opção desejada:\n 1 - Acessar registros\n 2 - Acessar sistema da academia\n 3 - Sair\n Escolha: ", [1, 2, 3])
+    opcao = funcoes.validar_opcao("\nDigite a opção desejada:\n 1 - Acessar registros de alunos\n 2 - Acessar sistema da academia (Professores)\n 3 - Sair\n Escolha: ", [1, 2, 3])
     
     if opcao == 3:
         funcoes.sair()

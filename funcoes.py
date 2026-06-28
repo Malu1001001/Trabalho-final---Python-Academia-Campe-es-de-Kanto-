@@ -3,12 +3,25 @@ from datetime import date, datetime
 import json                              
 import os                                
 from dateutil.relativedelta import relativedelta
+import subprocess                        
 
 # Nome do TERCEIRO ARQUIVO (onde ficam salvos os dados puros)
 ARQUIVO_JSON = "registros_academia.json"
 
 def sair():
-    print("Saindo do sistema... Até logo, Treinador!")
+    print("--Salvando o seu progresso no diário... Não desligue o console.--")
+    print("-- Até logo, Treinador! Sua jornada rumo à Liga Pokémon continua em breve!--")
+
+#-----------------------------------UM SOMZIM TEMPORÁRIO---------------------------------------------
+
+def tocar_som_pokemon(musiquinhapokemon):
+    """Função reutilizável para tocar qualquer arquivo MP3 no Linux"""
+    try:
+        comando = ["ffplay", "-nodisp", "-autoexit", musiquinhapokemon]
+        subprocess.Popen(comando, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass # Se o computador não tiver o tocador ou o arquivo sumir, o sistema continua rodando sem travar (vai que eu esqueço e apago)
+
 
 #------------------------------------------EXCEÇÕES - (TUDO QUE NÃO PODE OCORRER)------------------------        
 def validar_idade(texto):
@@ -17,7 +30,7 @@ def validar_idade(texto):
             idade = int(input(texto))
             if 0 < idade < 120:
                 return idade
-            print("Por favor, digite uma idade válida (entre 1 e 120 anos).")
+            print("Por favor, digite uma idade válida (entre 1 e 120 anos).") #vai que existe alguém assim né, no guiness tem...
         except ValueError:
             print("Erro: Digite apenas números inteiros! Tente novamente.")
 
@@ -54,7 +67,9 @@ def acessar_registros():
         
     meses_por_frequencia = {1: 1, 2: 3, 3: 12}  
 
-    opcao2 = validar_opcao("1 - Realizar novo registro\n 2 - Acessar registros já cadastrados e checar bloqueios\n 3 - Planos\n Escolha: ", [1, 2, 3])
+    # MENU SIMPLIFICADO: Sem a opção da catraca, apenas com novo registro, consulta de bloqueios, planos, relatórios e CRUD
+    opcao2 = validar_opcao("1 - Realizar novo registro\n 2 - Acessar registros já cadastrados e checar bloqueios\n 3 - Planos\n 4 - Relatórios com Filtros\n 5 - Alterar ou Remover Aluno\n Escolha: ", [1, 2, 3, 4, 5])
+    print("--"*90)
     
     if opcao2 == 1:
         nome = input("Digite seu nome completo: ")
@@ -63,7 +78,6 @@ def acessar_registros():
         idade = validar_idade("Digite a sua idade: ")
         opcao3 = validar_opcao("Digite a opção desejada: \n 1 - Acessar planos/modalidades e horários\n 2 - Voltar\n Escolha: ", [1, 2])
 
-        # Variáveis iniciando vazias
         opcao_planos = "Vazio"
         opcao_modalidades = "Vazio"
         data_matricula_str = "Vazio"
@@ -73,9 +87,11 @@ def acessar_registros():
         if opcao3 == 1:
             print("Conheça nossos planos:")
             opcao_planos = validar_opcao("1 - Plano Caverna Diglet (básico) R$:100,00:\n Inclui equipamentos de uso diário, uso do espaço para lanches e local para banhos.\n\n 2 - Plano Área da elite (premium) R$: 200,00:\n Inclui sauna privativa;\n acompanhamento com nutricionista;\n personal trainner especializado;\n e brindes personalizados da nossa academia.\n\n**Esses valores não incluem as modalidades escolhidas a parte**\n Escolha: ", [1, 2])
-                    
+            print("--"*90)
+                   
             print("Escolha a duração do plano:")
             frequencia = validar_opcao("1 - Mensal\n2 - Trimestral\n3 - Anual\n Escolha: ", [1, 2, 3])
+            print("--"*90)
                     
             # Cálculo automático das datas
             hoje = date.today()
@@ -85,23 +101,62 @@ def acessar_registros():
             data_matricula_str = hoje.strftime("%d/%m/%Y")
             data_vencimento_str = vencimento.strftime("%d/%m/%Y")
 
-            opcao_modalidades = validar_opcao("\nPara deixar o nosso serviço ainda mais completo temos as modalidades que ficam a escolha do cliente, quantas quiser!\n 1 - Crossfit\n 2 - Pilates\n 3 - Zumba\n 4 - Jiu-jitsu\n Escolha: ", [1, 2, 3, 4])
+            # --- CONCILIANDO AS TURMAS DE PROFESSORES COM LIMITE DE 40 ALUNOS ---
+            if os.path.exists("aulas_academia.json"):
+                with open("aulas_academia.json", "r", encoding="utf-8") as f:
+                    aulas_academia = json.load(f)
+            else:
+                aulas_academia = []
 
-            # --- NOVO: MENU DE PAGAMENTO FICTÍCIO ---
-            print("\n" + "="*30)
+            if not aulas_academia:
+                print("\n[Aviso] Nenhum professor ou horário cadastrado pela administração ainda!")
+                opcao_modalidades = "Nenhuma aula escolhida"
+            else:
+                print("--"*90)
+                print("\n--- TURMAS E HORÁRIOS DISPONÍVEIS (Limite: 40 por turma) ---")
+                opcoes_validas_turma = []
+                
+                for idx, turma in enumerate(aulas_academia, start=1):
+                    vagas = 40 - turma["alunos_matriculados"]
+                    print(f" {idx} - {turma['modalidade'].upper()} | Prof. {turma['professor']} | Horário: {turma['horário']} ({vagas} vagas restantes)")
+                    opcoes_validas_turma.append(idx)
+                
+                while True:
+                    escolha_turma = validar_opcao("Escolha o número da turma que deseja se matricular: ", opcoes_validas_turma)
+                    turma_selecionada = aulas_academia[escolha_turma - 1]
+                    
+                    if turma_selecionada["alunos_matriculados"] >= 40:
+                        print("-- Um SNORLAX selvagem apareceu e bloqueou a entrada desta turma! -- ")
+                        print(" --  (Turma lotada com 40 treinadores. Escolha outro horário ou use uma Poké Flauta.) -- ")
+
+                    else:
+                        turma_selecionada["alunos_matriculados"] += 1
+                        
+                        with open("aulas_academia.json", "w", encoding="utf-8") as f:
+                            json.dump(aulas_academia, f, indent=4, ensure_ascii=False)
+                            
+                        opcao_modalidades = f"{turma_selecionada['modalidade']} com Prof. {turma_selecionada['professor']} às {turma_selecionada['horário']}"
+                        print(f" Matrícula confirmada na turma de {turma_selecionada['modalidade']}!")
+                        break
+
+            # -------------------------------------------------- MENU DE PAGAMENTO FICTÍCIO -------------------------------------------------------------
+            print("="*30)
             print("      TELA DE PAGAMENTO")
             print("="*30)
             forma_pago = validar_opcao("Escolha a forma de pagamento:\n 1 - PIX\n 2 - Cartão de Crédito\n Escolha: ", [1, 2])
             
             if forma_pago == 1:
                 pagamento_status = "Efetuado via PIX"
-                print("\n[Sistema] Gerando QR Code fictício... Pagamento aprovado!")
+                tocar_som_pokemon("pokemon_healed.mp3")
+                print("\n[Sistema] QR Code gerado... Pagamento aprovado!")
             elif forma_pago == 2:
                 pagamento_status = "Efetuado via Cartão de Crédito"
-                print("\n[Sistema] Processando dados do cartão... Pagamento aprovado!")
+                tocar_som_pokemon("pokemon_healed.mp3")
+                print("\n[Sistema] Cartão processado... Pagamento aprovado!")
             print("="*30)
 
-        # O campo 'pagamento' foi adicionado aqui no dicionário
+        # Montagem correta da ficha do aluno e salvamento do valor arrecadado
+        valor_base = 100.0 if opcao_planos == 1 else (200.0 if opcao_planos == 2 else 0.0)
         registro = {
             "nome": nome,
             "peso": peso,
@@ -111,39 +166,43 @@ def acessar_registros():
             "opcao_modalidades": opcao_modalidades,
             "data_matricula": data_matricula_str,
             "data_vencimento": data_vencimento_str,
-            "pagamento": pagamento_status # Salva o método de pagamento no registro
+            "pagamento": pagamento_status,
+            "valor_pago": valor_base
         }
-
-        registros.append(registro) 
+        registros.append(registro)
         
-        # PASSO A PASSO JSON: Salva no terceiro arquivo separado
         with open(ARQUIVO_JSON, "w", encoding="utf-8") as f:
             json.dump(registros, f, indent=4, ensure_ascii=False)
             
-        print("\n--- Registro Concluído com Sucesso! ---")
-        print(registros)
+        comando = ["ffplay", "-nodisp", "-autoexit", "pokemon_healed.mp3"]
+        subprocess.Popen(comando, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        print("=================== CENTRO POKÉMON ===================")
+        print("  Nurse Joy: 'Obrigada por esperar. Nós restauramos os seus')")
+        print("  parâmetros de Treinador para o potencial máximo!'")
+        print("  -- Cadastro concluído! Esperamos ver você novamente! --")
+        print("======================================================")
+
+
 
     elif opcao2 == 2:
         print("\n--- STATUS DE ACESSO DOS ALUNOS ---")
         if not registros:
-            print("Nenhum registro encontrado no arquivo.")
+            print("Nenhum registro encontrado no arquivo separado.")
         else:
             for r in registros:
                 vencimento_str = r["data_vencimento"]
-                forma_pagamento = r.get("pagamento", "Não Efetuado") # Pega o pagamento salvo ou define padrão
+                forma_pagamento = r.get("pagamento", "Não Efetuado")
                 
-                # Se o pagamento não foi feito ou o usuário voltou, o acesso é bloqueado
                 if vencimento_str == "Vazio" or forma_pagamento == "Não Efetuado":
-                    status = "🔴 Acesso Bloqueado (Falta efetuar pagamento do plano)"
+                    status = "Acesso Bloqueado (Inadimplente / Falta plano)"
                 else:
-                    # Compara a data de hoje com o vencimento guardado no JSON
                     hoje = date.today()
                     data_vencimento = datetime.strptime(vencimento_str, "%d/%m/%Y").date()
-                    
                     if hoje > data_vencimento:
-                        status = "🔴 Acesso Bloqueado (Mensalidade Vencida)"
+                        status = "Acesso Bloqueado (Mensalidade Vencida)"
                     else:
-                        status = f"🟢 Acesso Liberado ({forma_pagamento})"
+                        status = f"Acesso Liberado ({forma_pagamento})"
                 
                 print(f"Treinador: {r['nome']} | Vencimento: {vencimento_str} | Status: {status}")
 
@@ -151,3 +210,32 @@ def acessar_registros():
         print("\n--- INFORMAÇÕES DE PLANOS ---")
         print("1. Plano Caverna Diglet - Básico R$:100,00")
         print("2. Plano Área da Elite - Premium R$:200,00")
+
+        # 4 - REQUISITO EXIGIDO: Relatórios com filtros estruturados (Soma financeira e lista de inadimplentes)
+    elif opcao2 == 4:
+        print("\n--- CENTRAL DE RELATÓRIOS ---")
+        filtro = validar_opcao("1 - Listar apenas Alunos Inadimplentes (Bloqueados)\n2 - Faturamento Financeiro Total Arrecadado\n Escolha: ", [1, 2])
+        
+        if filtro == 1:
+            print("\n--- ALUNOS INADIMPLENTES / BLOQUEADOS ---")
+            cont = 0
+            for r in registros:
+                vencimento_str = r["data_vencimento"]
+                
+                # Se o aluno voltou (Vazio) ou a data de vencimento já passou da data de hoje
+                if vencimento_str == "Vazio" or datetime.strptime(vencimento_str, "%d/%m/%Y").date() < date.today():
+                    print(f" Aluno: {r['nome']} | Plano Vencido em: {vencimento_str}")
+                    cont += 1
+            
+            if cont == 0:
+                print("Excelente! Nenhum aluno inadimplente encontrado.")
+            else:
+                print(f"\nTotal de alunos inadimplentes: {cont}")
+                
+        elif filtro == 2:
+            print("\n--- RELATÓRIO FINANCEIRO DE KANTO ---")
+            total = sum(r.get("valor_pago", 0.0) for r in registros)
+            print(f"Receita Bruta Total Arrecadada: R$ {total:.2f}")
+            print(f"Total de matrículas ativas no sistema: {len(registros)}")
+
+                    
