@@ -19,7 +19,7 @@ def salvar_aulas(dados):
         json.dump(dados, arquivo, indent=4, ensure_ascii=False)
 #----------------------------------------------------------------------------------------------------------------
 
-print(f'│{"Bem-vindos à Academia Campeões de Kanto":^50}│')
+print(f"Bem-vindos à Academia Campeões de Kanto:")
 print(" "*90)
 print("MISSÃO: Nossa missão é guiar a jornada de cada aluno rumo ao seu potencial máximo, transformando o esforço diário em evolução\n constante. Queremos despertar o verdadeiro mestre que existe em você,superando qualquer desafio dentro e fora do treino.")
 print(" "*90)
