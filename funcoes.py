@@ -1,9 +1,7 @@
-#----------------------REGISTROS(matriculas de todo mundo)-----------------------
-from datetime import date, datetime      
+#----------------------REGISTROS(matriculas de todo mundo)-----------------------      
 import json                              
 import os                                
-from dateutil.relativedelta import relativedelta
-import subprocess                        
+from datetime import date, datetime, timedelta                       
 
 # Nome do TERCEIRO ARQUIVO (onde ficam salvos os dados puros)
 ARQUIVO_JSON = "registros_academia.json"
@@ -11,18 +9,6 @@ ARQUIVO_JSON = "registros_academia.json"
 def sair():
     print("--Salvando o seu progresso no diário... Não desligue o console.--")
     print("-- Até logo, Treinador! Sua jornada rumo à Liga Pokémon continua em breve!--")
-
-#-----------------------------------UM SOMZIM TEMPORÁRIO---------------------------------------------
-
-def tocar_som_pokemon(musiquinhapokemon):
-    """Função reutilizável para tocar qualquer arquivo MP3 no Linux"""
-    try:
-        comando = ["ffplay", "-nodisp", "-autoexit", musiquinhapokemon]
-        subprocess.Popen(comando, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass # Se o computador não tiver o tocador ou o arquivo sumir, o sistema continua rodando sem travar (vai que eu esqueço e apago)
-
-
 #------------------------------------------EXCEÇÕES - (TUDO QUE NÃO PODE OCORRER)------------------------        
 def validar_idade(texto):
     while True:
@@ -64,10 +50,8 @@ def acessar_registros():
             registros = json.load(f)
     else:
         registros = []
-        
-    meses_por_frequencia = {1: 1, 2: 3, 3: 12}  
 
-# MENU SIMPLIFICADO:novo registro, consulta de bloqueios, planos, relatórios e CRUD (menu "principal, ou secundário no caso")
+# novo registro, consulta de bloqueios, planos, relatórios 
     opcao2 = validar_opcao("1 - Realizar novo registro\n 2 - Acessar registros já cadastrados e checar bloqueios\n 3 - Planos\n 4 - Relatórios com Filtros\n 5 - Alterar ou Remover Aluno\n Escolha: ", [1, 2, 3, 4, 5])
     print("--"*90)
     
@@ -93,14 +77,27 @@ def acessar_registros():
             frequencia = validar_opcao("1 - Mensal\n2 - Trimestral\n3 - Anual\n Escolha: ", [1, 2, 3])
             print("--"*90)
 
-# Cálculo automático das datas
-            hoje = date.today()
-            meses_adicionais = meses_por_frequencia.get(frequencia, 1) 
-            vencimento = hoje + relativedelta(months=meses_adicionais)
-                    
-            data_matricula_str = hoje.strftime("%d/%m/%Y")
-            data_vencimento_str = vencimento.strftime("%d/%m/%Y")
+# Cálculo das datas e do valor com desconto 
+        # --- CÁLCULO AUTOMÁTICO DAS DATAS (SEM BIBLIOTECAS EXTERNAS) ---
+        hoje = date.today()
 
+        # Convertendo a frequência diretamente para dias (1 mês = 30 dias, 3 meses = 90 dias, 12 meses = 360 dias)
+        dias_por_frequencia = {1: 30, 2: 90, 3: 360}
+        dias_adicionais = dias_por_frequencia.get(frequencia, 30)
+
+        vencimento = hoje + timedelta(days=dias_adicionais)
+                
+        data_matricula_str = hoje.strftime("%d/%m/%Y")
+        data_vencimento_str = vencimento.strftime("%d/%m/%Y")
+
+        # Define o valor padrão
+        valor_base = 100.0 if opcao_planos == 1 else (200.0 if opcao_planos == 2 else 0.0)
+
+        # Simplificado: Aplica o desconto direto no valor baseado na frequência
+        if frequencia == 2:   # Trimestral
+            valor_base *= 0.90
+        elif frequencia == 3: # Anual
+            valor_base *= 0.80
 # --- CONCILIANDO AS TURMAS DE PROFESSORES COM LIMITE DE 40 ALUNOS ---
             if os.path.exists("aulas_academia.json"):
                 with open("aulas_academia.json", "r", encoding="utf-8") as f:
@@ -147,11 +144,9 @@ def acessar_registros():
             
             if forma_pago == 1:
                 pagamento_status = "Efetuado via PIX"
-                tocar_som_pokemon("pokemon_healed.mp3")
                 print("\n[Sistema] QR Code gerado... Pagamento aprovado!")
             elif forma_pago == 2:
                 pagamento_status = "Efetuado via Cartão de Crédito"
-                tocar_som_pokemon("pokemon_healed.mp3")
                 print("\n[Sistema] Cartão processado... Pagamento aprovado!")
             print("="*30)
 
@@ -208,10 +203,45 @@ def acessar_registros():
         print("1. Plano Caverna Diglet - Básico R$:100,00")
         print("2. Plano Área da Elite - Premium R$:200,00")
 
-        # 4 - REQUISITO EXIGIDO: Relatórios com filtros estruturados (Soma financeira e lista de inadimplentes)
+        # (Soma financeira e lista de inadimplentes)
     elif opcao2 == 4:
         print("\n--- CENTRAL DE RELATÓRIOS ---")
         filtro = validar_opcao("1 - Listar apenas Alunos Inadimplentes (Bloqueados)\n2 - Faturamento Financeiro Total Arrecadado\n Escolha: ", [1, 2])
+
+    #  ALTERAR OU REMOVER TREINADOR 
+    elif opcao2 == 5:
+        print("\n--- ALTERAR OU REMOVER TREINADOR ---")
+        if not registros:
+            print("Nenhum treinador cadastrado no sistema.")
+        else:
+            nome_busca = input("Digite o nome exato do treinador: ").strip()
+            
+            # Busca direta sem o .lower()
+            aluno_selecionado = None
+            for aluno in registros:
+                if aluno["nome"] == nome_busca:
+                    aluno_selecionado = aluno
+                    break
+            
+            if aluno_selecionado is None:
+                print("Treinador não encontrado! Digite o nome exatamente como foi cadastrado.")
+            else:
+                print(f"\nTreinador encontrado: {aluno_selecionado['nome']}")
+                acao = validar_opcao("O que deseja fazer?\n1 - Alterar Dados (Peso/Altura/Idade)\n2 - Remover Treinador do Sistema\nEscolha: ", [1, 2])
+                
+                if acao == 1:
+                    aluno_selecionado['peso'] = validar_float("Digite o novo peso: ")
+                    aluno_selecionado['altura'] = validar_float("Digite a nova altura: ")
+                    aluno_selecionado['idade'] = validar_idade("Digite a nova idade: ")
+                    print(f"\n[Sistema] Dados de {aluno_selecionado['nome']} atualizados!")
+                    
+                elif acao == 2:
+                    registros.remove(aluno_selecionado)
+                    print(f"\n[Sistema] {nome_busca} foi removido com sucesso!")
+
+                # Grava no arquivo
+                with open(ARQUIVO_JSON, "w", encoding="utf-8") as f:
+                    json.dump(registros, f, indent=4, ensure_ascii=False)
         
         if filtro == 1:
             print("\n--- ALUNOS INADIMPLENTES / BLOQUEADOS ---")
@@ -219,20 +249,18 @@ def acessar_registros():
             for r in registros:
                 vencimento_str = r["data_vencimento"]
                 
-                # Se o aluno voltou (Vazio) ou a data de vencimento já passou da data de hoje
-                if vencimento_str == "Vazio" or datetime.strptime(vencimento_str, "%d/%m/%Y").date() < date.today():
-                    print(f" Aluno: {r['nome']} | Plano Vencido em: {vencimento_str}")
+                if vencimento_str != "Vazio":
+                    data_vencimento = datetime.strptime(vencimento_str, "%d/%m/%Y").date()
+                    hoje = date.today()
+                    
+                    # Se a data de hoje passou do vencimento
+                    if data_vencimento < hoje:
+                        dias_atraso = (hoje - data_vencimento).days
+                        multa = 5.00 + (dias_atraso * 0.50) # R$ 5 fixo + R$ 0,50 por dia
+                        
+                        print(f" Aluno: {r['nome']} | Vencido em: {vencimento_str} ({dias_atraso} dias de atraso) | Multa: R$ {multa:.2f}")
+                        cont += 1
+                else:
+                    print(f" Aluno: {r['nome']} | Sem plano ativo.")
                     cont += 1
-            
-            if cont == 0:
-                print("Excelente! Nenhum aluno inadimplente encontrado.")
-            else:
-                print(f"\nTotal de alunos inadimplentes: {cont}")
-                
-        elif filtro == 2:
-            print("\n--- RELATÓRIO FINANCEIRO DE KANTO ---")
-            total = sum(r.get("valor_pago", 0.0) for r in registros)
-            print(f"Receita Bruta Total Arrecadada: R$ {total:.2f}")
-            print(f"Total de matrículas ativas no sistema: {len(registros)}")
-
                     

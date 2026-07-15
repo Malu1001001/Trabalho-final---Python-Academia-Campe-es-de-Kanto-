@@ -1,0 +1,14 @@
+[
+    {
+        "professor": "Misty",
+        "modalidade": "natação",
+        "horário": "19:00",
+        "alunos_matriculados": 0
+    },
+    {
+        "professor": "Misty",
+        "modalidade": "natação",
+        "horário": "21:00",
+        "alunos_matriculados": 0
+    }
+]
