@@ -1,4 +1,4 @@
-#----------------------REGISTROS------------------------
+#----------------------REGISTROS(matriculas de todo mundo)-----------------------
 from datetime import date, datetime      
 import json                              
 import os                                
@@ -45,7 +45,7 @@ def validar_float(texto):
         except ValueError:
             print("Erro: Digite apenas números (use ponto em vez de vírgula). Tente novamente.")
 
-#----------------FUNÇÃO REUTILIZÁVEL-----------------------
+#----------------FUNÇÃO REUTILIZÁVEL (dá pra usar pra várias coisas ex.: digitar somente os números presente no menu :) )-----------------------
 def validar_opcao(texto, opcoes_validas):
     """Garante que o usuário escolha apenas uma das opções numéricas do menu"""
     while True:
@@ -67,7 +67,7 @@ def acessar_registros():
         
     meses_por_frequencia = {1: 1, 2: 3, 3: 12}  
 
-    # MENU SIMPLIFICADO: Sem a opção da catraca, apenas com novo registro, consulta de bloqueios, planos, relatórios e CRUD
+# MENU SIMPLIFICADO:novo registro, consulta de bloqueios, planos, relatórios e CRUD (menu "principal, ou secundário no caso")
     opcao2 = validar_opcao("1 - Realizar novo registro\n 2 - Acessar registros já cadastrados e checar bloqueios\n 3 - Planos\n 4 - Relatórios com Filtros\n 5 - Alterar ou Remover Aluno\n Escolha: ", [1, 2, 3, 4, 5])
     print("--"*90)
     
@@ -92,8 +92,8 @@ def acessar_registros():
             print("Escolha a duração do plano:")
             frequencia = validar_opcao("1 - Mensal\n2 - Trimestral\n3 - Anual\n Escolha: ", [1, 2, 3])
             print("--"*90)
-                    
-            # Cálculo automático das datas
+
+# Cálculo automático das datas
             hoje = date.today()
             meses_adicionais = meses_por_frequencia.get(frequencia, 1) 
             vencimento = hoje + relativedelta(months=meses_adicionais)
@@ -101,7 +101,7 @@ def acessar_registros():
             data_matricula_str = hoje.strftime("%d/%m/%Y")
             data_vencimento_str = vencimento.strftime("%d/%m/%Y")
 
-            # --- CONCILIANDO AS TURMAS DE PROFESSORES COM LIMITE DE 40 ALUNOS ---
+# --- CONCILIANDO AS TURMAS DE PROFESSORES COM LIMITE DE 40 ALUNOS ---
             if os.path.exists("aulas_academia.json"):
                 with open("aulas_academia.json", "r", encoding="utf-8") as f:
                     aulas_academia = json.load(f)
@@ -139,7 +139,7 @@ def acessar_registros():
                         print(f" Matrícula confirmada na turma de {turma_selecionada['modalidade']}!")
                         break
 
-            # -------------------------------------------------- MENU DE PAGAMENTO FICTÍCIO -------------------------------------------------------------
+# -------------------------------------------------- MENU DE PAGAMENTO FICTÍCIO -------------------------------------------------------------
             print("="*30)
             print("      TELA DE PAGAMENTO")
             print("="*30)
@@ -173,12 +173,9 @@ def acessar_registros():
         
         with open(ARQUIVO_JSON, "w", encoding="utf-8") as f:
             json.dump(registros, f, indent=4, ensure_ascii=False)
-            
-        comando = ["ffplay", "-nodisp", "-autoexit", "pokemon_healed.mp3"]
-        subprocess.Popen(comando, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         print("=================== CENTRO POKÉMON ===================")
-        print("  Nurse Joy: 'Obrigada por esperar. Nós restauramos os seus')")
+        print("  Nurse Joy: 'Obrigada por esperar. Nós restauramos os seus atributos...")
         print("  parâmetros de Treinador para o potencial máximo!'")
         print("  -- Cadastro concluído! Esperamos ver você novamente! --")
         print("======================================================")
@@ -186,7 +183,7 @@ def acessar_registros():
 
 
     elif opcao2 == 2:
-        print("\n--- STATUS DE ACESSO DOS ALUNOS ---")
+        print("--- STATUS DE ACESSO DOS ALUNOS ---")
         if not registros:
             print("Nenhum registro encontrado no arquivo separado.")
         else:
