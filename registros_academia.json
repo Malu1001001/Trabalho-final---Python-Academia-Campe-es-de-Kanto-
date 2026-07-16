@@ -1,0 +1,38 @@
+[
+    {
+        "nome": "iarley",
+        "peso": 18.0,
+        "altura": 1.71,
+        "idade": 18,
+        "opcao_planos": 2,
+        "opcao_modalidades": "Vazio",
+        "data_matricula": "15/07/2026",
+        "data_vencimento": "14/08/2026",
+        "pagamento": "Não Efetuado",
+        "valor_pago": 200.0
+    },
+    {
+        "nome": "Ian Souza Lisboa",
+        "peso": 60.0,
+        "altura": 170.0,
+        "idade": 20,
+        "opcao_planos": 1,
+        "opcao_modalidades": "Vazio",
+        "data_matricula": "15/07/2026",
+        "data_vencimento": "14/08/2026",
+        "pagamento": "Não Efetuado",
+        "valor_pago": 100.0
+    },
+    {
+        "nome": "fsdaesdfgsd",
+        "peso": 535.0,
+        "altura": 4353.0,
+        "idade": 5,
+        "opcao_planos": 2,
+        "opcao_modalidades": "natação com Prof. Misty às 19:00",
+        "data_matricula": "15/07/2026",
+        "data_vencimento": "10/07/2027",
+        "pagamento": "Efetuado via Cartão de Crédito",
+        "valor_pago": 160.0
+    }
+]

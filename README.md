@@ -89,4 +89,4 @@ A cada acesso do aluno, registra-se data/hora de entrada e verifica-se a situaç
 ## 🚀 Como Executar
 
 ```bash
-python main.py
+python Academia Campeões de Kanto.py

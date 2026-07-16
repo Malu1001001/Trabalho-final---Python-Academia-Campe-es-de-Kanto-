@@ -44,7 +44,7 @@ def validar_opcao(texto, opcoes_validas):
             print("Erro: Digite apenas o número da opção desejada.")
 
 def acessar_registros():
-    # PASSO A PASSO JSON: Se o terceiro arquivo já existir, traz os dados dele.
+    #  Se o terceiro arquivo já existir, traz os dados dele.
     if os.path.exists(ARQUIVO_JSON):
         with open(ARQUIVO_JSON, "r", encoding="utf-8") as f:
             registros = json.load(f)
@@ -78,26 +78,25 @@ def acessar_registros():
             print("--"*90)
 
 # Cálculo das datas e do valor com desconto 
-        # --- CÁLCULO AUTOMÁTICO DAS DATAS (SEM BIBLIOTECAS EXTERNAS) ---
-        hoje = date.today()
+            hoje = date.today()
 
-        # Convertendo a frequência diretamente para dias (1 mês = 30 dias, 3 meses = 90 dias, 12 meses = 360 dias)
-        dias_por_frequencia = {1: 30, 2: 90, 3: 360}
-        dias_adicionais = dias_por_frequencia.get(frequencia, 30)
+            # Convertendo a frequência diretamente para dias (1 mês = 30 dias, 3 meses = 90 dias, 12 meses = 360 dias)
+            dias_por_frequencia = {1: 30, 2: 90, 3: 360}
+            dias_adicionais = dias_por_frequencia.get(frequencia, 30)
 
-        vencimento = hoje + timedelta(days=dias_adicionais)
-                
-        data_matricula_str = hoje.strftime("%d/%m/%Y")
-        data_vencimento_str = vencimento.strftime("%d/%m/%Y")
+            vencimento = hoje + timedelta(days=dias_adicionais)
+                    
+            data_matricula_str = hoje.strftime("%d/%m/%Y")
+            data_vencimento_str = vencimento.strftime("%d/%m/%Y")
 
-        # Define o valor padrão
-        valor_base = 100.0 if opcao_planos == 1 else (200.0 if opcao_planos == 2 else 0.0)
+            # Define o valor padrão do plano
+            valor_base = 100.0 if opcao_planos == 1 else 200.0
 
-        # Simplificado: Aplica o desconto direto no valor baseado na frequência
-        if frequencia == 2:   # Trimestral
-            valor_base *= 0.90
-        elif frequencia == 3: # Anual
-            valor_base *= 0.80
+            if frequencia == 2:   # Trimestral
+                valor_base *= 0.90
+            elif frequencia == 3: # Anual
+                valor_base *= 0.80
+
 # --- CONCILIANDO AS TURMAS DE PROFESSORES COM LIMITE DE 40 ALUNOS ---
             if os.path.exists("aulas_academia.json"):
                 with open("aulas_academia.json", "r", encoding="utf-8") as f:
@@ -150,8 +149,6 @@ def acessar_registros():
                 print("\n[Sistema] Cartão processado... Pagamento aprovado!")
             print("="*30)
 
-        # Montagem correta da ficha do aluno e salvamento do valor arrecadado
-        valor_base = 100.0 if opcao_planos == 1 else (200.0 if opcao_planos == 2 else 0.0)
         registro = {
             "nome": nome,
             "peso": peso,
@@ -208,15 +205,43 @@ def acessar_registros():
         print("\n--- CENTRAL DE RELATÓRIOS ---")
         filtro = validar_opcao("1 - Listar apenas Alunos Inadimplentes (Bloqueados)\n2 - Faturamento Financeiro Total Arrecadado\n Escolha: ", [1, 2])
 
+        if filtro == 1:
+            print("\n--- ALUNOS INADIMPLENTES / BLOQUEADOS ---")
+            cont = 0
+            for r in registros:
+                vencimento_str = r["data_vencimento"]
+                    
+                if vencimento_str != "Vazio":
+                    data_vencimento = datetime.strptime(vencimento_str, "%d/%m/%Y").date()
+                    hoje = date.today()
+                        
+                    # Se a data de hoje passou do vencimento
+                    if data_vencimento < hoje:
+                        dias_atraso = (hoje - data_vencimento).days
+                        multa = 5.00 + (dias_atraso * 0.50) # R$ 5 fixo + R$ 0,50 por dia
+                            
+                        print(f" Aluno: {r['nome']} | Vencido em: {vencimento_str} ({dias_atraso} dias de atraso) | Multa: R$ {multa:.2f}")
+                        cont += 1
+                    else:
+                        print(f" Aluno: {r['nome']} | Sem plano ativo.")
+                        cont += 1
+
+        elif filtro == 2:
+                total = 0
+
+                for r in registros:
+                    total += r["valor_pago"]
+
+                print(f"Total arrecadado: R$ {total:.2f}")
+
     #  ALTERAR OU REMOVER TREINADOR 
     elif opcao2 == 5:
         print("\n--- ALTERAR OU REMOVER TREINADOR ---")
         if not registros:
             print("Nenhum treinador cadastrado no sistema.")
         else:
-            nome_busca = input("Digite o nome exato do treinador: ").strip()
+            nome_busca = input("Digite o nome exato do treinador: ").strip() #tira os espaços, tipo se digitar nome composto ou dar espaço no começo
             
-            # Busca direta sem o .lower()
             aluno_selecionado = None
             for aluno in registros:
                 if aluno["nome"] == nome_busca:
@@ -243,24 +268,5 @@ def acessar_registros():
                 with open(ARQUIVO_JSON, "w", encoding="utf-8") as f:
                     json.dump(registros, f, indent=4, ensure_ascii=False)
         
-        if filtro == 1:
-            print("\n--- ALUNOS INADIMPLENTES / BLOQUEADOS ---")
-            cont = 0
-            for r in registros:
-                vencimento_str = r["data_vencimento"]
-                
-                if vencimento_str != "Vazio":
-                    data_vencimento = datetime.strptime(vencimento_str, "%d/%m/%Y").date()
-                    hoje = date.today()
-                    
-                    # Se a data de hoje passou do vencimento
-                    if data_vencimento < hoje:
-                        dias_atraso = (hoje - data_vencimento).days
-                        multa = 5.00 + (dias_atraso * 0.50) # R$ 5 fixo + R$ 0,50 por dia
-                        
-                        print(f" Aluno: {r['nome']} | Vencido em: {vencimento_str} ({dias_atraso} dias de atraso) | Multa: R$ {multa:.2f}")
-                        cont += 1
-                else:
-                    print(f" Aluno: {r['nome']} | Sem plano ativo.")
-                    cont += 1
-                    
+            
+                                    
